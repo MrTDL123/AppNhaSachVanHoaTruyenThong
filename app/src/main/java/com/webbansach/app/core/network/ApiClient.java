@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -99,6 +100,10 @@ public class ApiClient {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustAllCerts, new SecureRandom());
             SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            // Áp dụng SSL bypass toàn cục cho HttpsURLConnection (giúp Glide tải được ảnh từ localhost tự ký)
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
+            HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
 
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
             builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);

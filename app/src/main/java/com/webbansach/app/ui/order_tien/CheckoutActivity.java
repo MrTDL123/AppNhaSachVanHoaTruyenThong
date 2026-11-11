@@ -4,19 +4,23 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import com.google.gson.Gson;
+import com.webbansach.app.core.local.TokenManager;
 import com.webbansach.app.core.network.ApiCallback;
 import com.webbansach.app.core.network.ApiClient;
 import com.webbansach.app.core.utils.Constants;
 import com.webbansach.app.core.utils.CurrencyUtils;
 import com.webbansach.app.core.utils.GpsLocationHelper;
 import com.webbansach.app.databinding.ActivityMh08CheckoutBinding;
+import com.webbansach.app.models.AddressDto;
 import com.webbansach.app.models.ApplyVoucherDto;
 import com.webbansach.app.models.CartDto;
 import com.webbansach.app.models.CreateOrderDto;
@@ -40,6 +44,41 @@ public class CheckoutActivity extends AppCompatActivity {
     private ActivityMh08CheckoutBinding binding;
     private GpsLocationHelper gpsHelper;
 
+    private double originalAmount = 0.0;
+    private double currentFinalAmount = 0.0;
+    private String appliedCouponCode = null;
+    private Integer selectedSavedAddressId = null;
+
+    // Launcher nhận địa chỉ từ Sổ địa chỉ MH11
+    private final ActivityResultLauncher<Intent> selectAddressLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    String json = result.getData().getStringExtra(Constants.EXTRA_SELECTED_ADDRESS_JSON);
+                    if (json != null && !json.isEmpty()) {
+                        AddressDto address = new Gson().fromJson(json, AddressDto.class);
+                        if (address != null) {
+                            selectedSavedAddressId = address.addressId;
+                            binding.etReceiverName.setText(address.receiverName);
+                            binding.etReceiverPhone.setText(address.receiverPhone);
+                            String full = (address.fullAddress != null && !address.fullAddress.isEmpty())
+                                    ? address.fullAddress : address.detailAddress;
+                            binding.etDetailAddress.setText(full);
+                            binding.tvSelectedAddress.setText("Địa chỉ từ sổ: " + full);
+                        }
+                    }
+                }
+            });
+
+    // Launcher xin quyền GPS
+    private final ActivityResultLauncher<String> requestLocationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    fetchGpsLocation();
+                } else {
+                    Toast.makeText(this, "Quyền vị trí bị từ chối, không thể lấy địa chỉ tự động!", Toast.LENGTH_SHORT).show();
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,27 +87,211 @@ public class CheckoutActivity extends AppCompatActivity {
 
         gpsHelper = new GpsLocationHelper(this);
 
-        // TODO [Tiến]: Thiết kế giao diện thanh toán và xử lý sự kiện
-        // Gợi ý GPS:
-        // gpsHelper.getCurrentAddress(new GpsLocationHelper.OnAddressListener() {
-        //     @Override public void onAddressFound(String fullAddress) { /* điền vào ô địa chỉ */ }
-        //     @Override public void onError(String errorMessage) { Toast.makeText(...); }
-        // });
-        //
-        // Gợi ý Voucher:
-        // ApiClient.getApi(this).applyVoucher(new ApplyVoucherDto(code, amount)).enqueue(...);
-        //
-        // Gợi ý Checkout:
-        // CreateOrderDto orderDto = new CreateOrderDto();
-        // orderDto.receiverName = ...; orderDto.paymentMethod = 0; ...
-        // ApiClient.getApi(this).checkout(orderDto).enqueue(new ApiCallback<OrderDto>() {
-        //     @Override public void onSuccess(OrderDto data, String message) {
-        //         Intent intent = new Intent(CheckoutActivity.this, OrderSuccessActivity.class);
-        //         intent.putExtra(Constants.EXTRA_ORDER_ID, data.orderId);
-        //         intent.putExtra(Constants.EXTRA_ORDER_CODE, data.orderCode);
-        //         startActivity(intent);
-        //         finish();
-        //     }
-        // });
+        setupToolbar();
+        prefillUserInfo();
+        setupEvents();
+        loadCartSummary();
+    }
+
+    private void setupToolbar() {
+        binding.toolbar.setNavigationOnClickListener(v -> finish());
+    }
+
+    private void prefillUserInfo() {
+        TokenManager tm = TokenManager.getInstance(this);
+        if (tm.getUserFullName() != null && !tm.getUserFullName().isEmpty()) {
+            binding.etReceiverName.setText(tm.getUserFullName());
+        }
+        if (tm.getUserPhone() != null && !tm.getUserPhone().isEmpty()) {
+            binding.etReceiverPhone.setText(tm.getUserPhone());
+        }
+        if (tm.getUserAddress() != null && !tm.getUserAddress().isEmpty()) {
+            binding.etDetailAddress.setText(tm.getUserAddress());
+            binding.tvSelectedAddress.setText(tm.getUserAddress());
+        }
+    }
+
+    private void setupEvents() {
+        // Nút lấy địa chỉ GPS
+        binding.btnGpsAddress.setOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                fetchGpsLocation();
+            } else {
+                requestLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+        });
+
+        // Nút mở sổ địa chỉ
+        binding.btnSelectAddress.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AddressListActivity.class);
+            intent.putExtra(Constants.EXTRA_SELECT_ADDRESS_MODE, true);
+            selectAddressLauncher.launch(intent);
+        });
+
+        // Nút Áp dụng Voucher
+        binding.btnApplyVoucher.setOnClickListener(v -> applyVoucher());
+
+        // Nút Đặt hàng
+        binding.btnPlaceOrder.setOnClickListener(v -> placeOrder());
+    }
+
+    private void fetchGpsLocation() {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        gpsHelper.getCurrentAddress(new GpsLocationHelper.OnAddressListener() {
+            @Override
+            public void onAddressFound(String fullAddress) {
+                binding.progressBar.setVisibility(View.GONE);
+                selectedSavedAddressId = null; // Đây là địa chỉ GPS trực tiếp
+                binding.etDetailAddress.setText(fullAddress);
+                binding.tvSelectedAddress.setText("Địa chỉ GPS: " + fullAddress);
+                Toast.makeText(CheckoutActivity.this, "Đã cập nhật địa chỉ từ GPS thành công!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(CheckoutActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadCartSummary() {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        ApiClient.getApi(this).getCart().enqueue(new ApiCallback<CartDto>() {
+            @Override
+            public void onSuccess(CartDto data, String message) {
+                binding.progressBar.setVisibility(View.GONE);
+                if (data == null || data.items == null || data.items.isEmpty()) {
+                    Toast.makeText(CheckoutActivity.this, "Giỏ hàng của bạn đang trống!", Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
+                originalAmount = data.totalAmount;
+                currentFinalAmount = originalAmount;
+                updateSummaryTotal();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(CheckoutActivity.this, "Không tải được giỏ hàng: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void applyVoucher() {
+        String code = binding.etVoucher.getText() != null ? binding.etVoucher.getText().toString().trim() : "";
+        if (code.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập mã giảm giá", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        binding.progressBar.setVisibility(View.VISIBLE);
+        ApiClient.getApi(this).applyVoucher(new ApplyVoucherDto(code, originalAmount))
+                .enqueue(new ApiCallback<VoucherApplyResultDto>() {
+                    @Override
+                    public void onSuccess(VoucherApplyResultDto data, String message) {
+                        binding.progressBar.setVisibility(View.GONE);
+                        if (data != null && data.isValid) {
+                            appliedCouponCode = code;
+                            currentFinalAmount = data.finalAmount;
+                            binding.tvVoucherResult.setVisibility(View.VISIBLE);
+                            binding.tvVoucherResult.setText("Đã áp dụng mã " + code + ": Giảm " + CurrencyUtils.formatVnd(data.discountAmount));
+                            updateSummaryTotal();
+                            Toast.makeText(CheckoutActivity.this, "Áp dụng mã giảm giá thành công!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            appliedCouponCode = null;
+                            currentFinalAmount = originalAmount;
+                            binding.tvVoucherResult.setVisibility(View.VISIBLE);
+                            binding.tvVoucherResult.setText(data != null && data.errorMessage != null ? data.errorMessage : "Mã giảm giá không hợp lệ");
+                            updateSummaryTotal();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        binding.progressBar.setVisibility(View.GONE);
+                        appliedCouponCode = null;
+                        currentFinalAmount = originalAmount;
+                        binding.tvVoucherResult.setVisibility(View.VISIBLE);
+                        binding.tvVoucherResult.setText(errorMessage);
+                        updateSummaryTotal();
+                        Toast.makeText(CheckoutActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void updateSummaryTotal() {
+        binding.tvSummaryTotal.setText("Tổng thanh toán: " + CurrencyUtils.formatVnd(currentFinalAmount));
+    }
+
+    private void placeOrder() {
+        String name = binding.etReceiverName.getText() != null ? binding.etReceiverName.getText().toString().trim() : "";
+        String phone = binding.etReceiverPhone.getText() != null ? binding.etReceiverPhone.getText().toString().trim() : "";
+        String address = binding.etDetailAddress.getText() != null ? binding.etDetailAddress.getText().toString().trim() : "";
+        String notes = binding.etNotes.getText() != null ? binding.etNotes.getText().toString().trim() : "";
+
+        if (name.isEmpty()) {
+            binding.etReceiverName.setError("Vui lòng nhập họ tên người nhận");
+            binding.etReceiverName.requestFocus();
+            return;
+        }
+        if (phone.isEmpty()) {
+            binding.etReceiverPhone.setError("Vui lòng nhập số điện thoại người nhận");
+            binding.etReceiverPhone.requestFocus();
+            return;
+        }
+        if (address.isEmpty()) {
+            binding.etDetailAddress.setError("Vui lòng nhập địa chỉ nhận hàng");
+            binding.etDetailAddress.requestFocus();
+            return;
+        }
+
+        // Xác định phương thức thanh toán
+        int paymentMethod = 0; // COD
+        int checkedId = binding.rgPaymentMethod.getCheckedRadioButtonId();
+        if (checkedId == binding.rbVnpay.getId()) {
+            paymentMethod = 1;
+        } else if (checkedId == binding.rbMomo.getId()) {
+            paymentMethod = 2;
+        } else if (checkedId == binding.rbBank.getId()) {
+            paymentMethod = 3;
+        }
+
+        CreateOrderDto orderDto = new CreateOrderDto();
+        orderDto.receiverName = name;
+        orderDto.receiverPhone = phone;
+        orderDto.detailAddress = address;
+        orderDto.notes = notes;
+        orderDto.paymentMethod = paymentMethod;
+        orderDto.couponCode = appliedCouponCode;
+        orderDto.savedAddressId = selectedSavedAddressId;
+
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.btnPlaceOrder.setEnabled(false);
+
+        ApiClient.getApi(this).checkout(orderDto).enqueue(new ApiCallback<OrderDto>() {
+            @Override
+            public void onSuccess(OrderDto data, String message) {
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(CheckoutActivity.this, "Đặt hàng thành công!", Toast.LENGTH_LONG).show();
+
+                Intent intent = new Intent(CheckoutActivity.this, OrderSuccessActivity.class);
+                if (data != null) {
+                    intent.putExtra(Constants.EXTRA_ORDER_ID, data.orderId);
+                    intent.putExtra(Constants.EXTRA_ORDER_CODE, data.orderCode);
+                }
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.btnPlaceOrder.setEnabled(true);
+                Toast.makeText(CheckoutActivity.this, "Đặt hàng thất bại: " + errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

@@ -32,9 +32,38 @@ public class OrderSuccessActivity extends AppCompatActivity {
         int orderId = getIntent().getIntExtra(Constants.EXTRA_ORDER_ID, -1);
         String orderCode = getIntent().getStringExtra(Constants.EXTRA_ORDER_CODE);
 
-        // TODO [Tiến]: Thiết kế giao diện thành công và xử lý sự kiện
-        // - Hiển thị orderCode
-        // - Nút "Xem đơn hàng" -> startActivity(new Intent(this, OrderHistoryActivity.class))
-        // - Nút "Về trang chủ" -> startActivity(new Intent(this, HomeActivity.class))
+        if (orderCode != null && !orderCode.isEmpty()) {
+            binding.tvOrderCode.setText("Mã đơn hàng: #" + orderCode);
+        } else if (orderId > 0) {
+            binding.tvOrderCode.setText("Mã đơn hàng: #" + orderId);
+        } else {
+            binding.tvOrderCode.setText("Đặt hàng thành công!");
+        }
+
+        // Nút "Xem đơn hàng" -> Mở Lịch sử đơn hàng (MH12)
+        binding.btnViewOrder.setOnClickListener(v -> {
+            Intent intent = new Intent(OrderSuccessActivity.this, OrderHistoryActivity.class);
+            intent.putExtra(Constants.EXTRA_ORDER_ID, orderId);
+            startActivity(intent);
+            finish();
+        });
+
+        // Nút "Tiếp tục mua sắm" -> Quay về Trang chủ (MH04)
+        binding.btnContinueShopping.setOnClickListener(v -> navigateToHome());
+
+        // Bắt sự kiện nút quay lại (Back) để điều hướng về Trang chủ tránh back lại Checkout
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateToHome();
+            }
+        });
+    }
+
+    private void navigateToHome() {
+        Intent intent = new Intent(OrderSuccessActivity.this, HomeActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 }
