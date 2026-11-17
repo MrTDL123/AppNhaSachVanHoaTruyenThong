@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.App.CardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp">
+
+        <!-- Ảnh bìa sách nhỏ gọn -->
+        <ImageView
+            android:id="@+id/ivBookThumb"
+            android:layout_width="50dp"
+            android:layout_height="65dp"
+            android:contentDescription="Ảnh sách"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Tên sách -->
+        <TextView
+            android:id="@+id/tvBookTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="Tên sách"
+            android:textColor="@color/text_main"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/tvBookPrice"
+            app:layout_constraintStart_toEndOf="@+id/ivBookThumb"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Số lượng đặt mua (vd: x2) -->
+        <TextView
+            android:id="@+id/tvBookQuantity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="6dp"
+            android:text="x1"
+            android:textColor="@color/text_sub"
+            android:textSize="13sp"
+            app:layout_constraintStart_toEndOf="@+id/ivBookThumb"
+            app:layout_constraintTop_toBottomOf="@+id/tvBookTitle" />
+
+        <!-- Tổng tiền món này (Giá x Số lượng) -->
+        <TextView
+            android:id="@+id/tvBookPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="150.000 đ"
+            android:textColor="@color/price_red"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

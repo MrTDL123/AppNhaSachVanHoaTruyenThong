@@ -11,8 +11,10 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.gson.Gson;
+import com.webbansach.app.R;
 import com.webbansach.app.core.local.TokenManager;
 import com.webbansach.app.core.network.ApiCallback;
 import com.webbansach.app.core.network.ApiClient;
@@ -23,9 +25,14 @@ import com.webbansach.app.databinding.ActivityMh08CheckoutBinding;
 import com.webbansach.app.models.AddressDto;
 import com.webbansach.app.models.ApplyVoucherDto;
 import com.webbansach.app.models.CartDto;
+import com.webbansach.app.models.CartItemDto;
 import com.webbansach.app.models.CreateOrderDto;
 import com.webbansach.app.models.OrderDto;
 import com.webbansach.app.models.VoucherApplyResultDto;
+import com.webbansach.app.ui.order_tien.adapter.CheckoutProductAdapter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * MH08 - Thanh toán (Checkout) - Tích hợp GPS
@@ -48,6 +55,24 @@ public class CheckoutActivity extends AppCompatActivity {
     private double currentFinalAmount = 0.0;
     private String appliedCouponCode = null;
     private Integer selectedSavedAddressId = null;
+    private String selectedVoucherCode = null; // Mã voucher đang được chọn
+    private CheckoutProductAdapter productAdapter;
+    private ArrayList<Integer> selectedProductIds = new ArrayList<>();
+
+    // Model đơn giản cho voucher - không cần file riêng vì chỉ dùng ở đây
+    private static class VoucherInfo {
+        String code;
+        String description;
+        String minOrderText;
+        double minOrderAmount;
+
+        VoucherInfo(String code, String description, String minOrderText, double minOrderAmount) {
+            this.code = code;
+            this.description = description;
+            this.minOrderText = minOrderText;
+            this.minOrderAmount = minOrderAmount;
+        }
+    }
 
     // Launcher nhận địa chỉ từ Sổ địa chỉ MH11
     private final ActivityResultLauncher<Intent> selectAddressLauncher =
@@ -86,15 +111,27 @@ public class CheckoutActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         gpsHelper = new GpsLocationHelper(this);
+        ArrayList<Integer> ids = getIntent().getIntegerArrayListExtra("selectedProductIds");
+        if (ids != null) {
+            selectedProductIds = ids;
+        }
 
         setupToolbar();
+        setupProductRecyclerView();
         prefillUserInfo();
         setupEvents();
         loadCartSummary();
+        setupVoucherList();
     }
 
     private void setupToolbar() {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
+    }
+
+    private void setupProductRecyclerView() {
+        productAdapter = new CheckoutProductAdapter();
+        binding.rvCheckoutProducts.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvCheckoutProducts.setAdapter(productAdapter);
     }
 
     private void prefillUserInfo() {
@@ -128,9 +165,6 @@ public class CheckoutActivity extends AppCompatActivity {
             intent.putExtra(Constants.EXTRA_SELECT_ADDRESS_MODE, true);
             selectAddressLauncher.launch(intent);
         });
-
-        // Nút Áp dụng Voucher
-        binding.btnApplyVoucher.setOnClickListener(v -> applyVoucher());
 
         // Nút Đặt hàng
         binding.btnPlaceOrder.setOnClickListener(v -> placeOrder());
@@ -167,7 +201,30 @@ public class CheckoutActivity extends AppCompatActivity {
                     finish();
                     return;
                 }
-                originalAmount = data.totalAmount;
+
+                // Lọc danh sách: chỉ giữ lại những sản phẩm được user tick chọn ở CartActivity
+                List<CartItemDto> selectedItems = new ArrayList<>();
+                double total = 0.0;
+
+                for (CartItemDto item : data.items) {
+                    // Nếu không có mảng filter (hoặc rỗng) thì lấy tất cả, ngược lại chỉ lấy item có trong selectedProductIds
+                    if (selectedProductIds.isEmpty() || selectedProductIds.contains(item.productId)) {
+                        selectedItems.add(item);
+                        total += item.getDisplayPrice() * item.quantity;
+                    }
+                }
+
+                if (selectedItems.isEmpty()) {
+                    Toast.makeText(CheckoutActivity.this, "Không có sản phẩm nào được chọn!", Toast.LENGTH_SHORT).show();
+                    finish();
+                    return;
+                }
+
+                // Đổ danh sách vào RecyclerView để hiển thị
+                productAdapter.submitList(selectedItems);
+
+                // Cập nhật tổng tiền chỉ tính trên các món được chọn
+                originalAmount = total;
                 currentFinalAmount = originalAmount;
                 updateSummaryTotal();
             }
@@ -180,10 +237,40 @@ public class CheckoutActivity extends AppCompatActivity {
         });
     }
 
-    private void applyVoucher() {
-        String code = binding.etVoucher.getText() != null ? binding.etVoucher.getText().toString().trim() : "";
-        if (code.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập mã giảm giá", Toast.LENGTH_SHORT).show();
+    private void setupVoucherList() {
+        // Danh sách voucher - hiện tại hardcode, sau này có thể gọi API GET /api/vouchers
+        List<VoucherInfo> vouchers = new ArrayList<>();
+        vouchers.add(new VoucherInfo("VANHOA10", "Giảm 25.000đ", "Đơn tối thiểu 200.000đ", 200000));
+        vouchers.add(new VoucherInfo("GIAM30K",  "Giảm 30.000đ", "Đơn tối thiểu 150.000đ", 150000));
+
+        // Với mỗi voucher, tạo 1 card view và thêm vào layoutVoucherList
+        android.view.LayoutInflater inflater = android.view.LayoutInflater.from(this);
+
+        for (VoucherInfo voucher : vouchers) {
+            // Nạp layout item_tien_voucher.xml
+            android.view.View cardView = inflater.inflate(R.layout.item_tien_voucher, binding.layoutVoucherList, false);
+
+            // Gán data lên từng view trong card
+            ((android.widget.TextView) cardView.findViewById(R.id.tvVoucherCode)).setText(voucher.code);
+            ((android.widget.TextView) cardView.findViewById(R.id.tvVoucherDesc)).setText(voucher.description);
+            ((android.widget.TextView) cardView.findViewById(R.id.tvVoucherMin)).setText(voucher.minOrderText);
+
+            // Nút Áp dụng
+            cardView.findViewById(R.id.btnApplyVoucher).setOnClickListener(v -> {
+                applyVoucherByCode(voucher.code, voucher.minOrderAmount);
+            });
+
+            binding.layoutVoucherList.addView(cardView);
+        }
+    }
+
+    // Áp dụng voucher từ danh sách card (thay thế nhập tay)
+    private void applyVoucherByCode(String code, double minOrderAmount) {
+        // Kiểm tra đơn hàng đủ điều kiện chưa
+        if (originalAmount < minOrderAmount) {
+            Toast.makeText(this,
+                    "Đơn hàng chưa đủ điều kiện áp dụng mã này",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -197,27 +284,24 @@ public class CheckoutActivity extends AppCompatActivity {
                             appliedCouponCode = code;
                             currentFinalAmount = data.finalAmount;
                             binding.tvVoucherResult.setVisibility(View.VISIBLE);
-                            binding.tvVoucherResult.setText("Đã áp dụng mã " + code + ": Giảm " + CurrencyUtils.formatVnd(data.discountAmount));
+                            binding.tvVoucherResult.setText(
+                                    "✓ Đã áp dụng " + code + ": Giảm " + CurrencyUtils.formatVnd(data.discountAmount)
+                            );
                             updateSummaryTotal();
-                            Toast.makeText(CheckoutActivity.this, "Áp dụng mã giảm giá thành công!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CheckoutActivity.this, "Áp dụng thành công!", Toast.LENGTH_SHORT).show();
                         } else {
-                            appliedCouponCode = null;
-                            currentFinalAmount = originalAmount;
                             binding.tvVoucherResult.setVisibility(View.VISIBLE);
-                            binding.tvVoucherResult.setText(data != null && data.errorMessage != null ? data.errorMessage : "Mã giảm giá không hợp lệ");
-                            updateSummaryTotal();
+                            binding.tvVoucherResult.setText(
+                                    data != null && data.errorMessage != null ? data.errorMessage : "Mã không hợp lệ"
+                            );
                         }
                     }
 
                     @Override
                     public void onError(String errorMessage) {
                         binding.progressBar.setVisibility(View.GONE);
-                        appliedCouponCode = null;
-                        currentFinalAmount = originalAmount;
                         binding.tvVoucherResult.setVisibility(View.VISIBLE);
                         binding.tvVoucherResult.setText(errorMessage);
-                        updateSummaryTotal();
-                        Toast.makeText(CheckoutActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
                     }
                 });
     }

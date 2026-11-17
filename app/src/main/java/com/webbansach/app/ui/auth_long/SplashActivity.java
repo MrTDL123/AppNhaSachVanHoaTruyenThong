@@ -58,7 +58,7 @@ public class SplashActivity extends AppCompatActivity {
     private void autoLoginAndOpenCart() {
         Log.d("TEST_AUTH", "Đang tự động đăng nhập tài khoản test...");
         // Đóng gói email và password mẫu
-        CustomerLoginDto loginDto = new CustomerLoginDto("jackacevn@gmail.com", "123456");
+        CustomerLoginDto loginDto = new CustomerLoginDto("nhasachvanhoatruyenthong@gmail.com", "12345");
         // Gọi API POST /api/Auth/mobile-login
         ApiClient.getApi(this).mobileLogin(loginDto).enqueue(new ApiCallback<AuthResponseDto>() {
             @Override

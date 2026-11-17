@@ -15,6 +15,9 @@ import com.webbansach.app.models.CartItemDto;
 import com.webbansach.app.models.UpdateCartItemQuantityDto;
 import com.webbansach.app.ui.order_tien.adapter.CartAdapter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * MH07 - Giỏ hàng
  * Phụ trách: Nguyễn Việt Tiến
@@ -59,9 +62,27 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
                 Toast.makeText(this, "Giỏ hàng của bạn đang trống!", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // Chuyển sang Màn hình MH08 - Thanh toán
+            List<CartItemDto> selectedItems = adapter.getSelectedItems();
+            if (selectedItems.isEmpty()) {
+                Toast.makeText(this, "Vui lòng chọn ít nhất 1 sản phẩm!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Gom productId của các item được chọn vào ArrayList để truyền qua Intent
+            ArrayList<Integer> selectedIds = new ArrayList<>();
+            for (CartItemDto item : selectedItems) {
+                selectedIds.add(item.productId);
+            }
+
             Intent intent = new Intent(CartActivity.this, CheckoutActivity.class);
+            intent.putIntegerArrayListExtra("selectedProductIds", selectedIds);
             startActivity(intent);
+        });
+        binding.ivBtnBack.setOnClickListener(v -> finish());
+        binding.cbSelectAll.setOnClickListener(v -> {
+            boolean isChecked = binding.cbSelectAll.isChecked();
+            adapter.setSelectAll(isChecked);
+            recalculateTotalFromSelection();
         });
     }
     // 3. Gọi API lấy toàn bộ dữ liệu giỏ hàng (GET /api/cart)
@@ -128,6 +149,8 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
             binding.tvTotalAmount.setText(CurrencyUtils.formatVnd(cart.totalAmount));
             // Đưa danh sách sách vào Adapter
             adapter.submitList(cart.items);
+            adapter.setSelectAll(false);
+            recalculateTotalFromSelection();
         }
     }
     // ================= XỬ LÝ SỰ KIỆN TỪ ADAPTER BẮN VỀ =================
@@ -184,5 +207,26 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
     // Tiện ích ẩn/hiện thanh xoay chờ loading
     private void showLoading(boolean isLoading) {
         binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public void onSelectionChanged() {
+        recalculateTotalFromSelection();
+    }
+
+    private void recalculateTotalFromSelection() {
+        List<CartItemDto> selectedItems = adapter.getSelectedItems();
+
+        double total = 0;
+        for (CartItemDto item : selectedItems) {
+            total += item.getDisplayPrice() * item.quantity;
+        }
+
+        binding.tvTotalAmount.setText(CurrencyUtils.formatVnd(total));
+
+        boolean hasSelection = !selectedItems.isEmpty();
+        binding.btnCheckout.setEnabled(hasSelection);
+        binding.btnCheckout.setAlpha(hasSelection ? 1.0f : 0.5f);
+        binding.cbSelectAll.setChecked(adapter.isAllSelected());
     }
 }
