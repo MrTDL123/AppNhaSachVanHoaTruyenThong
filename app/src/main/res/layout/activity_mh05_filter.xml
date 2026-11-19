@@ -1,143 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/bg_screen">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/bg_screen"
+    android:focusableInTouchMode="true">
 
-    <!-- Header Đỏ Fahasa -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutHeader"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_header_gradient"
-        android:paddingStart="12dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="12dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:orientation="horizontal" android:background="@drawable/bg_header_gradient" android:padding="8dp">
+        <ImageButton android:id="@+id/btnBack" android:layout_width="48dp" android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_revert" app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/hieu_filter_back" />
+        <EditText android:id="@+id/etSearch" android:layout_width="0dp" android:layout_height="48dp"
+            android:layout_weight="1" android:background="@drawable/bg_search_bar"
+            android:paddingHorizontal="12dp" android:hint="@string/hieu_filter_hint"
+            android:textColor="@color/text_main" android:textColorHint="@color/text_sub"
+            android:inputType="text" android:imeOptions="actionSearch" android:maxLines="1"
+            tools:text="Văn học" />
+        <Button android:id="@+id/btnSearch" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/hieu_filter_search" android:layout_marginStart="6dp" />
+    </LinearLayout>
 
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@android:drawable/ic_menu_revert"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/white"
+        android:gravity="center_vertical" android:paddingHorizontal="12dp">
+        <Button android:id="@+id/btnFilters" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/hieu_filter_filters" style="@style/Widget.App.Button.Outlined" />
+        <TextView android:id="@+id/resultsCount" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:gravity="end" android:textColor="@color/text_sub" android:accessibilityLiveRegion="polite"
+            tools:text="14 kết quả" />
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="38dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_search_bar"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/btnBack"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@android:drawable/ic_menu_search"
-                app:tint="@color/text_hint" />
-
-            <EditText
-                android:id="@+id/etSearch"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="8dp"
-                android:background="@null"
-                android:hint="Tìm kiếm sách, tác giả..."
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:textColor="@color/text_main"
-                android:textColorHint="@color/text_hint"
-                android:textSize="13sp" />
-        </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Filter chips row -->
-    <HorizontalScrollView
-        android:id="@+id/filterChipsScroll"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/white"
-        android:elevation="2dp"
-        android:scrollbars="none"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutHeader">
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupFilter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="12dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="6dp"
-            app:singleSelection="true">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipAll"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="Tất cả" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipPriceAsc"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Giá tăng dần" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipPriceDesc"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Giá giảm dần" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipRating"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Đánh giá cao" />
+    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/white"
+        android:scrollbars="none">
+        <com.google.android.material.chip.ChipGroup android:id="@+id/chipGroupFilter"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="12dp"
+            app:checkedChip="@+id/chipAll" app:singleLine="true" app:singleSelection="true"
+            app:selectionRequired="true">
+            <com.google.android.material.chip.Chip android:id="@id/chipAll"
+                style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/hieu_filter_default_sort" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipPriceAsc"
+                style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/hieu_filter_asc" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipPriceDesc"
+                style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/hieu_filter_desc" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipRating"
+                style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/hieu_filter_rating" />
+            <com.google.android.material.chip.Chip android:id="@+id/chipDiscount"
+                style="@style/Widget.MaterialComponents.Chip.Choice" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/hieu_filter_discount" />
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 
-    <!-- Product list -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvProducts"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:padding="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/filterChipsScroll" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:indeterminateTint="@color/primary_red"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="none">
+        <com.google.android.material.chip.ChipGroup android:id="@+id/activeFilters"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="12dp" app:singleLine="true" />
+    </HorizontalScrollView>
+    <LinearLayout android:id="@+id/historySection" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingHorizontal="12dp">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="@string/hieu_extra_history" android:textColor="@color/text_main" />
+            <Button android:id="@+id/clearHistory" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                style="@style/Widget.App.Button.Outlined" android:text="@string/hieu_extra_clear_history" />
+        </LinearLayout>
+        <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="none">
+            <com.google.android.material.chip.ChipGroup android:id="@+id/historyChips"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="12dp" app:singleLine="true" />
+        </HorizontalScrollView>
+    </LinearLayout>
+    <ScrollView android:id="@+id/filterPanel" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:visibility="gone" android:background="@color/white" android:nestedScrollingEnabled="true">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@+id/categoryFilter"
+                android:text="@string/hieu_filter_category" android:textColor="@color/text_main" />
+            <Spinner android:id="@id/categoryFilter" android:layout_width="match_parent" android:layout_height="48dp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@+id/authorFilter"
+                android:text="@string/hieu_filter_author" android:textColor="@color/text_main" />
+            <Spinner android:id="@id/authorFilter" android:layout_width="match_parent" android:layout_height="48dp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                <EditText android:id="@+id/minPrice" android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:hint="@string/hieu_filter_min"
+                    android:inputType="numberDecimal" android:maxLines="1" />
+                <EditText android:id="@+id/maxPrice" android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:hint="@string/hieu_filter_max"
+                    android:inputType="numberDecimal" android:maxLines="1" />
+            </LinearLayout>
+            <TextView android:id="@+id/filterStatus" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:visibility="gone" android:text="@string/hieu_filter_filter_error"
+                android:textColor="@color/primary_red" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="end">
+                <Button android:id="@+id/btnClear" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/hieu_filter_clear" style="@style/Widget.App.Button.Outlined" />
+                <Button android:id="@+id/btnApply" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/hieu_filter_apply" style="@style/Widget.App.Button.Primary" android:layout_marginStart="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvProducts"
+            android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:padding="8dp"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" app:spanCount="2"
+            tools:itemCount="4" tools:listitem="@layout/item_hieu_filter_book" />
+        <ProgressBar android:id="@+id/progressBar" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:visibility="gone" android:indeterminateTint="@color/primary_red" />
+        <LinearLayout android:id="@+id/resultStatus" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:gravity="center" android:orientation="vertical"
+            android:padding="20dp" android:visibility="gone">
+            <TextView android:id="@+id/statusMessage" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="center" android:textColor="@color/text_main" android:accessibilityLiveRegion="polite" />
+            <Button android:id="@+id/btnRetry" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/hieu_filter_retry" style="@style/Widget.App.Button.Outlined" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <LinearLayout android:id="@+id/pager" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center" android:background="@color/white" android:paddingHorizontal="8dp"
+        android:visibility="gone" tools:visibility="visible">
+        <Button android:id="@+id/btnPrevious" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/hieu_filter_previous" style="@style/Widget.App.Button.Outlined" />
+        <TextView android:id="@+id/pageLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:gravity="center" android:textColor="@color/text_main" tools:text="Trang 1/2" />
+        <Button android:id="@+id/btnNext" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="@string/hieu_filter_next" style="@style/Widget.App.Button.Outlined" />
+    </LinearLayout>
+</LinearLayout>

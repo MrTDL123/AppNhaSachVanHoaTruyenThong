@@ -1,260 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/bg_screen">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/bg_screen">
 
-    <!-- Top Header Fahasa Style (Gradient đỏ + Thanh tìm kiếm bo tròn pill) -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutTopHeader"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_header_gradient"
-        android:paddingStart="16dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="14dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <LinearLayout android:id="@+id/layoutTopHeader" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:orientation="vertical" android:background="@drawable/bg_header_gradient"
+        android:paddingHorizontal="16dp" android:paddingTop="12dp" android:paddingBottom="14dp"
+        app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/white" android:textSize="19sp" android:text="@string/hieu_home_brand" android:textStyle="bold" android:accessibilityHeading="true" />
 
         <TextView
-            android:id="@+id/tvBrand"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="NHÀ SÁCH VĂN HÓA"
-            android:textColor="@color/white"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Search Bar Pill (như app Fahasa & ViettelPost) -->
-        <LinearLayout
             android:id="@+id/layoutSearchBar"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_width="392dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:background="@drawable/bg_search_bar"
+            android:drawableStart="@android:drawable/ic_menu_search"
+            android:drawablePadding="8dp"
+            android:drawableTint="@color/text_sub"
+            android:focusable="true"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvBrand">
+            android:minHeight="48dp"
+            android:paddingHorizontal="14dp"
+            android:text="@string/hieu_home_search_hint"
+            android:textColor="@color/text_sub"
+            android:textSize="14sp" />
+    </LinearLayout>
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@android:drawable/ic_menu_search"
-                app:tint="@color/text_hint" />
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/swipeRefresh"
+        android:layout_width="0dp" android:layout_height="0dp" app:layout_constraintTop_toBottomOf="@id/layoutTopHeader"
+        app:layout_constraintBottom_toTopOf="@+id/homeNavigation"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+        <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+                android:paddingTop="6dp" android:paddingBottom="20dp">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:text="Tìm kiếm theo tên sách, tác giả, thể loại..."
-                android:textColor="@color/text_hint"
-                android:textSize="13sp" />
-        </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- Nội dung chính có Swipe to refresh -->
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefresh"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutTopHeader">
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingBottom="24dp">
-
-                <!-- 1. Banners Carousel -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvBanners"
                     android:layout_width="match_parent"
-                    android:layout_height="160dp"
-                    android:layout_marginTop="10dp"
-                    android:clipToPadding="false"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" />
-
-                <!-- 2. Danh mục thể loại (Card trắng nổi) -->
-                <com.google.android.material.card.MaterialCardView
-                    style="@style/Widget.App.CardView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:layout_marginTop="12dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="DANH MỤC NỔI BẬT"
-                            android:textColor="@color/primary_red"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvCategories"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- 3. Sách Mới Nhất -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="4dp"
-                        android:layout_height="18dp"
-                        android:background="@color/primary_red" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:text="SÁCH MỚI PHÁT HÀNH"
-                        android:textColor="@color/text_main"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Xem tất cả &gt;"
-                        android:textColor="@color/primary_red"
-                        android:textSize="13sp" />
-                </LinearLayout>
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvNewProducts"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="164dp"
                     android:layout_marginTop="8dp"
                     android:clipToPadding="false"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" />
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:visibility="gone"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:itemCount="3"
+                    tools:listitem="@layout/item_hieu_home_banner"
+                    tools:visibility="visible" />
 
-                <!-- 4. Sách Bán Chạy -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="4dp"
-                        android:layout_height="18dp"
-                        android:background="@color/accent_orange" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:text="SÁCH BÁN CHẠY NHẤT"
-                        android:textColor="@color/text_main"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Xem tất cả &gt;"
-                        android:textColor="@color/primary_red"
-                        android:textSize="13sp" />
+                <TextView android:id="@+id/bannerDots" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
+                    android:textColor="@color/primary_red" android:padding="4dp" android:visibility="gone" />
+                <LinearLayout android:id="@+id/homeCategorySection" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:layout_marginTop="16dp"
+                    android:visibility="gone" tools:visibility="visible">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/primary_red" android:textSize="18sp" android:text="@string/hieu_home_categories" android:textStyle="bold" android:paddingHorizontal="16dp" android:accessibilityHeading="true" />
+                    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvCategories"
+                        android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                        android:clipToPadding="false" android:paddingHorizontal="12dp"
+                        android:visibility="gone" tools:visibility="visible"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        android:orientation="horizontal" tools:itemCount="3"
+                        tools:listitem="@layout/item_hieu_home_category" />
                 </LinearLayout>
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvBestSellers"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:clipToPadding="false"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" />
-
-                <!-- 5. Tủ Sách 0 Đồng (Cộng đồng) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="4dp"
-                        android:layout_height="18dp"
-                        android:background="@color/color_success" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:text="TỦ SÁCH 0 ĐỒNG (QUYÊN GÓP)"
-                        android:textColor="@color/text_main"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                <LinearLayout android:id="@+id/recentSection" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+                    android:visibility="gone" android:paddingTop="16dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/hieu_extra_recent" android:textSize="18sp"
+                        android:textStyle="bold" android:textColor="@color/text_main" android:paddingHorizontal="16dp" />
+                    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvRecent"
+                        android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="12dp" android:layout_marginTop="8dp" />
                 </LinearLayout>
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvFreeBooks"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:clipToPadding="false"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" />
-
+                <LinearLayout android:id="@+id/homeNewHeading" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:layout_marginTop="16dp"
+                    android:visibility="gone" tools:visibility="visible">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text_main" android:textSize="18sp" android:text="@string/hieu_home_new_books" android:textStyle="bold" android:paddingHorizontal="16dp" android:accessibilityHeading="true" />
+                    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvNewProducts"
+                        android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                        android:clipToPadding="false" android:paddingHorizontal="12dp"
+                        android:visibility="gone" tools:visibility="visible"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        android:orientation="horizontal" tools:itemCount="3"
+                        tools:listitem="@layout/item_hieu_home_book" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/homeBestHeading" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:layout_marginTop="16dp"
+                    android:visibility="gone" tools:visibility="visible">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text_main" android:textSize="18sp" android:text="@string/hieu_home_best" android:textStyle="bold" android:paddingHorizontal="16dp" android:accessibilityHeading="true" />
+                    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvBestSellers"
+                        android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                        android:clipToPadding="false" android:paddingHorizontal="12dp"
+                        android:visibility="gone" tools:visibility="visible"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        android:orientation="horizontal" tools:itemCount="3"
+                        tools:listitem="@layout/item_hieu_home_book" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/homeFreeHeading" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:layout_marginTop="16dp"
+                    android:visibility="gone" tools:visibility="visible">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/color_success" android:textSize="18sp" android:text="@string/hieu_home_free" android:textStyle="bold" android:paddingHorizontal="16dp" android:accessibilityHeading="true" />
+                    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvFreeBooks"
+                        android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+                        android:clipToPadding="false" android:paddingHorizontal="12dp"
+                        android:visibility="gone" tools:visibility="visible"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        android:orientation="horizontal" tools:itemCount="3"
+                        tools:listitem="@layout/item_hieu_home_book" />
+                </LinearLayout>
             </LinearLayout>
         </ScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:indeterminateTint="@color/primary_red"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout android:id="@+id/homeNavigation" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:background="@color/white" android:elevation="3dp"
+        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        <TextView  android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:minHeight="56dp" android:gravity="center"
+                android:paddingTop="6dp" android:paddingBottom="4dp"
+                android:drawableTop="@android:drawable/ic_menu_view"
+                android:drawableTint="@color/primary_red"
+                android:text="@string/hieu_home_tab_home" android:textSize="12sp"
+                android:textColor="@color/primary_red"
+                android:textStyle="bold" />
+        <TextView android:id="@+id/homeNavSearch" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:minHeight="56dp" android:gravity="center"
+                android:paddingTop="6dp" android:paddingBottom="4dp"
+                android:drawableTop="@android:drawable/ic_menu_search"
+                android:drawableTint="@color/text_sub"
+                android:text="@string/hieu_home_tab_search" android:textSize="12sp"
+                android:textColor="@color/text_sub"
+                android:background="?attr/selectableItemBackground" android:focusable="true" />
+        <TextView android:id="@+id/homeNavCart" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:minHeight="56dp" android:gravity="center"
+                android:paddingTop="6dp" android:paddingBottom="4dp"
+                android:drawableTop="@android:drawable/ic_menu_add"
+                android:drawableTint="@color/text_sub"
+                android:text="@string/hieu_home_tab_cart" android:textSize="12sp"
+                android:textColor="@color/text_sub"
+                android:background="?attr/selectableItemBackground" android:focusable="true" />
+        <TextView android:id="@+id/homeNavProfile" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:minHeight="56dp" android:gravity="center"
+                android:paddingTop="6dp" android:paddingBottom="4dp"
+                android:drawableTop="@android:drawable/ic_menu_myplaces"
+                android:drawableTint="@color/text_sub"
+                android:text="@string/hieu_home_tab_profile" android:textSize="12sp"
+                android:textColor="@color/text_sub"
+                android:background="?attr/selectableItemBackground" android:focusable="true" />
+    </LinearLayout>
 
+    <LinearLayout android:id="@+id/homeStatus" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:gravity="center" android:orientation="vertical" android:padding="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/layoutTopHeader"
+        app:layout_constraintBottom_toTopOf="@id/homeNavigation"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+        <TextView android:id="@+id/homeStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text_main" android:textSize="16sp"  android:gravity="center" android:accessibilityLiveRegion="polite" />
+        <Button android:id="@+id/homeRetry" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            style="@style/Widget.App.Button.Primary" android:layout_marginTop="12dp"
+            android:text="@string/hieu_home_retry" />
+    </LinearLayout>
+    <ProgressBar android:id="@+id/progressBar" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:visibility="gone" android:indeterminateTint="@color/primary_red"
+        app:layout_constraintTop_toBottomOf="@id/layoutTopHeader"
+        app:layout_constraintBottom_toTopOf="@id/homeNavigation"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
