@@ -120,45 +120,69 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tilReceiverName">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etReceiverPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="phone" />
+
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Voucher -->
-        <LinearLayout
-            android:id="@+id/layoutVoucher"
+        <!-- Danh sách sản phẩm thanh toán -->
+        <TextView
+            android:id="@+id/tvProductsLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:text="Sản phẩm đặt mua"
+            android:textSize="16sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilReceiverPhone">
+            app:layout_constraintTop_toBottomOf="@+id/tilReceiverPhone" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilVoucher"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="Mã giảm giá">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etVoucher"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-            </com.google.android.material.textfield.TextInputLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCheckoutProducts"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:nestedScrollingEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvProductsLabel" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnApplyVoucher"
+        <!-- Voucher - Cuộn ngang -->
+        <TextView
+            android:id="@+id/tvVoucherLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Mã giảm giá"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rvCheckoutProducts" />
+
+        <HorizontalScrollView
+            android:id="@+id/layoutVoucher"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:scrollbars="none"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvVoucherLabel">
+
+            <LinearLayout
+                android:id="@+id/layoutVoucherList"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Áp dụng" />
-        </LinearLayout>
+                android:orientation="horizontal"
+                android:padding="4dp" />
+
+        </HorizontalScrollView>
 
         <TextView
             android:id="@+id/tvVoucherResult"
