@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingVertical="10dp">
+    <TextView android:id="@+id/reviewAuthor" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_main" android:textStyle="bold" tools:text="Minh Anh" />
+    <TextView android:id="@+id/reviewRating" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_main" android:layout_marginTop="3dp" tools:text="5/5 sao" />
+    <TextView android:id="@+id/reviewComment" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_main" android:layout_marginTop="4dp" tools:text="Sách đẹp, trình bày dễ đọc." />
+</LinearLayout>
