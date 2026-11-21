@@ -16,7 +16,6 @@ import com.webbansach.app.databinding.ActivityMh01SplashBinding;
 import com.webbansach.app.models.AuthResponseDto;
 import com.webbansach.app.models.CustomerLoginDto;
 import com.webbansach.app.ui.catalog_hieu.HomeActivity;
-import com.webbansach.app.ui.order_tien.CartActivity;
 
 /**
  * MH01 - Splash Screen (Màn hình khởi động)
@@ -52,10 +51,10 @@ public class SplashActivity extends AppCompatActivity {
 //        }, 2000);
 
         // Tự động gọi API đăng nhập tài khoản test để lấy Token thật
-        autoLoginAndOpenCart();
+        autoLoginAndOpenHome();
     }
 
-    private void autoLoginAndOpenCart() {
+    private void autoLoginAndOpenHome() {
         Log.d("TEST_AUTH", "Đang tự động đăng nhập tài khoản test...");
         // Đóng gói email và password mẫu
         CustomerLoginDto loginDto = new CustomerLoginDto("nhasachvanhoatruyenthong@gmail.com", "12345");
@@ -69,8 +68,8 @@ public class SplashActivity extends AppCompatActivity {
                 tokenManager.saveUserInfo(data);
                 Log.d("TEST_AUTH", "Đăng nhập thành công! Token: " + data.accessToken);
                 Toast.makeText(SplashActivity.this, "Đăng nhập tự động thành công!", Toast.LENGTH_SHORT).show();
-                // 2. Chuyển thẳng sang CartActivity với phiên đăng nhập hợp lệ
-                Intent intent = new Intent(SplashActivity.this, CartActivity.class);
+                // 2. Chuyển thẳng sang HomeActivity với phiên đăng nhập hợp lệ
+                Intent intent = new Intent(SplashActivity.this, HomeActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -78,8 +77,8 @@ public class SplashActivity extends AppCompatActivity {
             public void onError(String errorMessage) {
                 Log.e("TEST_AUTH", "Đăng nhập thất bại: " + errorMessage);
                 Toast.makeText(SplashActivity.this, "Lỗi đăng nhập: " + errorMessage, Toast.LENGTH_LONG).show();
-                // Nếu có lỗi mạng vẫn mở CartActivity để bạn quan sát lỗi
-                Intent intent = new Intent(SplashActivity.this, CartActivity.class);
+                // Nếu có lỗi mạng vẫn mở HomeActivity để bạn quan sát lỗi
+                Intent intent = new Intent(SplashActivity.this, HomeActivity.class);
                 startActivity(intent);
                 finish();
             }
