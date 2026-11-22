@@ -1,5 +1,7 @@
 package com.webbansach.app.models;
 
+import java.util.List;
+
 public class CreateOrderDto {
     public String receiverName;
     public String receiverPhone;
@@ -11,4 +13,5 @@ public class CreateOrderDto {
     public int paymentMethod; // 0: COD, 1: VNPAY, 2: Momo, 3: BankTransfer
     public String couponCode;
     public Integer savedAddressId;
+    public List<Integer> selectedProductIds; // THÊM DÒNG NÀY
 }

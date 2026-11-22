@@ -139,6 +139,10 @@ public interface AppApiService {
 
     // ===================== ORDERS =====================
 
+    /** MH08 - Lấy danh sách mã giảm giá khả dụng từ Backend */
+    @GET("api/orders/vouchers")
+    Call<ApiResponse<List<VoucherDto>>> getAvailableVouchers();
+
     /** MH09 - Kiểm tra mã giảm giá (Voucher) */
     @POST("api/orders/apply-voucher")
     Call<ApiResponse<VoucherApplyResultDto>> applyVoucher(@Body ApplyVoucherDto body);

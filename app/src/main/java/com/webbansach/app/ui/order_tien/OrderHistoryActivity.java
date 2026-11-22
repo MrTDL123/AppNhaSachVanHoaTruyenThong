@@ -12,12 +12,15 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
+import com.webbansach.app.R;
 import com.webbansach.app.core.network.ApiCallback;
 import com.webbansach.app.core.network.ApiClient;
 import com.webbansach.app.core.utils.Constants;
 import com.webbansach.app.core.utils.CurrencyUtils;
 import com.webbansach.app.databinding.ActivityMh12OrderHistoryBinding;
+import com.webbansach.app.databinding.DialogTienOrderDetailBinding;
 import com.webbansach.app.models.CancelOrderRequestDto;
 import com.webbansach.app.models.OrderDto;
 import com.webbansach.app.models.OrderItemDto;
@@ -134,37 +137,83 @@ public class OrderHistoryActivity extends AppCompatActivity implements OrderAdap
         });
     }
 
+    // Thay thế toàn bộ hàm showOrderDetailDialog cũ:
     private void showOrderDetailDialog(OrderDto order) {
         if (order == null) return;
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Mã đơn hàng: #").append(order.orderCode != null ? order.orderCode : order.orderId).append("\n");
-        sb.append("Ngày đặt: ").append(order.orderDate != null ? order.orderDate : "").append("\n");
-        sb.append("Trạng thái: ").append(order.statusText != null ? order.statusText : "").append("\n\n");
-        sb.append("Người nhận: ").append(order.receiverName != null ? order.receiverName : "").append("\n");
-        sb.append("SĐT: ").append(order.receiverPhone != null ? order.receiverPhone : "").append("\n");
-        sb.append("Địa chỉ: ").append(order.shippingAddress != null ? order.shippingAddress : "").append("\n\n");
-        sb.append("Phương thức thanh toán: ").append(order.paymentMethodText != null ? order.paymentMethodText : "COD").append("\n\n");
+        BottomSheetDialog bottomSheet = new BottomSheetDialog(this);
+        DialogTienOrderDetailBinding dBinding = DialogTienOrderDetailBinding.inflate(getLayoutInflater());
+        bottomSheet.setContentView(dBinding.getRoot());
 
+        // 1. Mã đơn & Ngày đặt & Trạng thái
+        String code = order.orderCode != null ? order.orderCode : String.valueOf(order.orderId);
+        dBinding.tvOrderCode.setText("#" + code);
+        dBinding.tvOrderStatus.setText(order.statusText != null ? order.statusText : "Chờ duyệt");
+        dBinding.tvOrderDate.setText("Ngày đặt: " + formatOrderDate(order.orderDate));
+
+        // 2. Thông tin nhận hàng
+        String receiverInfo = (order.receiverName != null ? order.receiverName : "")
+                + " | " + (order.receiverPhone != null ? order.receiverPhone : "");
+        dBinding.tvReceiverNamePhone.setText(receiverInfo);
+        dBinding.tvShippingAddress.setText(order.shippingAddress != null ? order.shippingAddress : "Chưa có địa chỉ");
+
+        // 3. Phương thức thanh toán
+        dBinding.tvPaymentMethod.setText(order.paymentMethodText != null ? order.paymentMethodText : "Thanh toán khi nhận hàng (COD)");
+
+        // 4. Danh sách sản phẩm (đổ động từng dòng)
+        dBinding.layoutProductsContainer.removeAllViews();
         if (order.items != null && !order.items.isEmpty()) {
-            sb.append("DANH SÁCH MÓN HÀNG:\n");
-            for (OrderItemDto oi : order.items) {
-                sb.append("- ").append(oi.title).append(" (x").append(oi.quantity).append("): ")
-                        .append(CurrencyUtils.formatVnd(oi.subtotal)).append("\n");
+            android.view.LayoutInflater inflater = getLayoutInflater();
+            for (OrderItemDto item : order.items) {
+                android.view.View itemView = inflater.inflate(R.layout.item_tien_order_detail_book, dBinding.layoutProductsContainer, false);
+                TextView tvTitle = itemView.findViewById(R.id.tvBookTitle);
+                TextView tvQuantityPrice = itemView.findViewById(R.id.tvBookQuantityPrice);
+                TextView tvSubtotal = itemView.findViewById(R.id.tvBookSubtotal);
+
+                tvTitle.setText(item.title);
+                tvQuantityPrice.setText("Số lượng: " + item.quantity + " x " + CurrencyUtils.formatVnd(item.unitPrice));
+                tvSubtotal.setText(CurrencyUtils.formatVnd(item.subtotal));
+
+                dBinding.layoutProductsContainer.addView(itemView);
             }
-            sb.append("\n");
         }
+
+        // 5. Tổng kết chi phí (sửa subtotal chữ t thường ở đây)
+        dBinding.tvSubTotal.setText(CurrencyUtils.formatVnd(order.subtotal));
+        dBinding.tvShippingFee.setText(CurrencyUtils.formatVnd(order.shippingFee));
 
         if (order.discountAmount > 0) {
-            sb.append("Giảm giá: -").append(CurrencyUtils.formatVnd(order.discountAmount)).append("\n");
+            dBinding.layoutDiscount.setVisibility(View.VISIBLE);
+            dBinding.tvDiscount.setText("- " + CurrencyUtils.formatVnd(order.discountAmount));
+        } else {
+            dBinding.layoutDiscount.setVisibility(View.GONE);
         }
-        sb.append("Tổng thanh toán: ").append(CurrencyUtils.formatVnd(order.totalAmount));
 
-        new AlertDialog.Builder(this)
-                .setTitle("Chi tiết đơn hàng")
-                .setMessage(sb.toString())
-                .setPositiveButton("Đóng", null)
-                .show();
+        dBinding.tvTotalAmount.setText(CurrencyUtils.formatVnd(order.totalAmount));
+
+        // 6. Nút Đóng
+        dBinding.btnClose.setOnClickListener(v -> bottomSheet.dismiss());
+
+        bottomSheet.show();
+    }
+
+    // Hàm phụ trợ định dạng ngày giờ cho đẹp mắt (dd/MM/yyyy HH:mm)
+    private String formatOrderDate(String rawDate) {
+        if (rawDate == null || rawDate.isEmpty()) return "";
+        try {
+            String clean = rawDate.split("\\.")[0]; // Bỏ phần miligiây .8959804
+            String[] parts = clean.split("T");
+            if (parts.length == 2) {
+                String[] dateParts = parts[0].split("-");
+                String time = parts[1].substring(0, Math.min(5, parts[1].length()));
+                if (dateParts.length == 3) {
+                    return dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0] + " " + time;
+                }
+            }
+            return rawDate.replace("T", " ");
+        } catch (Exception e) {
+            return rawDate;
+        }
     }
 
     @Override
