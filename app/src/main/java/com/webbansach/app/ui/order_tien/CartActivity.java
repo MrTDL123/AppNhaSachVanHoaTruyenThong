@@ -85,23 +85,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
             recalculateTotalFromSelection();
         });
     }
-    // 3. Gọi API lấy toàn bộ dữ liệu giỏ hàng (GET /api/cart)
-//    private void loadCartData() {
-//        showLoading(true);
-//        ApiClient.getApi(this).getCart().enqueue(new ApiCallback<CartDto>() {
-//            @Override
-//            public void onSuccess(CartDto data, String message) {
-//                showLoading(false);
-//                currentCart = data;
-//                updateUI(data);
-//            }
-//            @Override
-//            public void onError(String errorMessage) {
-//                showLoading(false);
-//                Toast.makeText(CartActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//    }
+
     private void loadCartData() {
         showLoading(true);
 

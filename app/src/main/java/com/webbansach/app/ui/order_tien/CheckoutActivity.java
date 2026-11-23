@@ -29,6 +29,7 @@ import com.webbansach.app.models.CartItemDto;
 import com.webbansach.app.models.CreateOrderDto;
 import com.webbansach.app.models.OrderDto;
 import com.webbansach.app.models.VoucherApplyResultDto;
+import com.webbansach.app.models.VoucherDto;
 import com.webbansach.app.ui.order_tien.adapter.CheckoutProductAdapter;
 
 import java.util.ArrayList;
@@ -59,20 +60,6 @@ public class CheckoutActivity extends AppCompatActivity {
     private CheckoutProductAdapter productAdapter;
     private ArrayList<Integer> selectedProductIds = new ArrayList<>();
 
-    // Model đơn giản cho voucher - không cần file riêng vì chỉ dùng ở đây
-    private static class VoucherInfo {
-        String code;
-        String description;
-        String minOrderText;
-        double minOrderAmount;
-
-        VoucherInfo(String code, String description, String minOrderText, double minOrderAmount) {
-            this.code = code;
-            this.description = description;
-            this.minOrderText = minOrderText;
-            this.minOrderAmount = minOrderAmount;
-        }
-    }
 
     // Launcher nhận địa chỉ từ Sổ địa chỉ MH11
     private final ActivityResultLauncher<Intent> selectAddressLauncher =
@@ -238,30 +225,47 @@ public class CheckoutActivity extends AppCompatActivity {
     }
 
     private void setupVoucherList() {
-        // Danh sách voucher - hiện tại hardcode, sau này có thể gọi API GET /api/vouchers
-        List<VoucherInfo> vouchers = new ArrayList<>();
-        vouchers.add(new VoucherInfo("VANHOA10", "Giảm 25.000đ", "Đơn tối thiểu 200.000đ", 200000));
-        vouchers.add(new VoucherInfo("GIAM30K",  "Giảm 30.000đ", "Đơn tối thiểu 150.000đ", 150000));
+        ApiClient.getApi(this).getAvailableVouchers().enqueue(new ApiCallback<List<VoucherDto>>() {
+            @Override
+            public void onSuccess(List<VoucherDto> vouchers, String message) {
+                // Xóa các view cũ trước khi nạp mới
+                binding.layoutVoucherList.removeAllViews();
 
-        // Với mỗi voucher, tạo 1 card view và thêm vào layoutVoucherList
-        android.view.LayoutInflater inflater = android.view.LayoutInflater.from(this);
+                if (vouchers == null || vouchers.isEmpty()) {
+                    // Nếu không có voucher nào khả dụng, có thể ẩn hoặc để trống
+                    return;
+                }
 
-        for (VoucherInfo voucher : vouchers) {
-            // Nạp layout item_tien_voucher.xml
-            android.view.View cardView = inflater.inflate(R.layout.item_tien_voucher, binding.layoutVoucherList, false);
+                android.view.LayoutInflater inflater = android.view.LayoutInflater.from(CheckoutActivity.this);
 
-            // Gán data lên từng view trong card
-            ((android.widget.TextView) cardView.findViewById(R.id.tvVoucherCode)).setText(voucher.code);
-            ((android.widget.TextView) cardView.findViewById(R.id.tvVoucherDesc)).setText(voucher.description);
-            ((android.widget.TextView) cardView.findViewById(R.id.tvVoucherMin)).setText(voucher.minOrderText);
+                for (VoucherDto voucher : vouchers) {
+                    // Nạp layout card item_tien_voucher.xml
+                    android.view.View cardView = inflater.inflate(R.layout.item_tien_voucher, binding.layoutVoucherList, false);
 
-            // Nút Áp dụng
-            cardView.findViewById(R.id.btnApplyVoucher).setOnClickListener(v -> {
-                applyVoucherByCode(voucher.code, voucher.minOrderAmount);
-            });
+                    android.widget.TextView tvCode = cardView.findViewById(R.id.tvVoucherCode);
+                    android.widget.TextView tvDesc = cardView.findViewById(R.id.tvVoucherDesc);
+                    android.widget.TextView tvMin = cardView.findViewById(R.id.tvVoucherMin);
+                    android.widget.Button btnApply = cardView.findViewById(R.id.btnApplyVoucher);
 
-            binding.layoutVoucherList.addView(cardView);
-        }
+                    tvCode.setText(voucher.code);
+                    tvDesc.setText(voucher.description != null ? voucher.description : ("Giảm " + CurrencyUtils.formatVnd(voucher.discountAmount)));
+                    tvMin.setText("Đơn tối thiểu " + CurrencyUtils.formatVnd(voucher.minOrderAmount));
+
+                    // Bắt sự kiện bấm nút Áp dụng
+                    btnApply.setOnClickListener(v -> {
+                        applyVoucherByCode(voucher.code, voucher.minOrderAmount);
+                    });
+
+                    binding.layoutVoucherList.addView(cardView);
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                // Nếu lỗi mạng hoặc không tải được voucher, thông báo nhẹ không làm gián đoạn thanh toán
+                android.util.Log.e("CHECKOUT_VOUCHER", "Không tải được voucher: " + errorMessage);
+            }
+        });
     }
 
     // Áp dụng voucher từ danh sách card (thay thế nhập tay)
@@ -351,6 +355,7 @@ public class CheckoutActivity extends AppCompatActivity {
         orderDto.paymentMethod = paymentMethod;
         orderDto.couponCode = appliedCouponCode;
         orderDto.savedAddressId = selectedSavedAddressId;
+        orderDto.selectedProductIds = selectedProductIds;
 
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.btnPlaceOrder.setEnabled(false);
