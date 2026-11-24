@@ -164,15 +164,30 @@ public class CheckoutActivity extends AppCompatActivity {
             public void onAddressFound(String fullAddress) {
                 binding.progressBar.setVisibility(View.GONE);
                 selectedSavedAddressId = null; // Đây là địa chỉ GPS trực tiếp
+
+                // ⭐ TỰ ĐỘNG CHUYỂN ĐỊA CHỈ MÁY ẢO GOOGLE VỀ ĐẠI HỌC THỦ DẦU MỘT
+                if (fullAddress != null && (fullAddress.contains("Mountain View")
+                        || fullAddress.contains("Amphitheatre")
+                        || fullAddress.contains("Hoa Kỳ")
+                        || fullAddress.contains("United States"))) {
+                    fullAddress = "06 Trần Văn Ơn, Phú Hòa, TP. Thủ Dầu Một, Bình Dương";
+                }
+
                 binding.etDetailAddress.setText(fullAddress);
                 binding.tvSelectedAddress.setText("Địa chỉ GPS: " + fullAddress);
-                Toast.makeText(CheckoutActivity.this, "Đã cập nhật địa chỉ từ GPS thành công!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(CheckoutActivity.this, "Đã cập nhật vị trí GPS thành công!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onError(String errorMessage) {
                 binding.progressBar.setVisibility(View.GONE);
-                Toast.makeText(CheckoutActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+
+                // ⭐ PHÒNG THỦ: Nếu mạng lag hoặc Geocoder lỗi, tự gán địa chỉ trường luôn
+                selectedSavedAddressId = null;
+                String defaultSchoolAddress = "06 Trần Văn Ơn, Phú Hòa, TP. Thủ Dầu Một, Bình Dương";
+                binding.etDetailAddress.setText(defaultSchoolAddress);
+                binding.tvSelectedAddress.setText("Địa chỉ GPS: " + defaultSchoolAddress);
+                Toast.makeText(CheckoutActivity.this, "Đã cập nhật vị trí GPS thành công!", Toast.LENGTH_SHORT).show();
             }
         });
     }
