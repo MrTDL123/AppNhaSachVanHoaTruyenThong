@@ -103,7 +103,7 @@ public class SplashActivity extends AppCompatActivity {
         if (isNavigated) return;
         isNavigated = true;
 
-        Intent intent = new Intent(SplashActivity.this, ProfileActivity.class);
+        Intent intent = new Intent(SplashActivity.this, HomeActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
